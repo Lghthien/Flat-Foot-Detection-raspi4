@@ -23,6 +23,26 @@ const PRESETS={
  lowlight:{gamma:2.0,brightness:20,contrast:1.15,saturation:1.1,sharpen:0.5,clahe:true}
 };
 let st=null, tab='photos', media={photos:[],videos:[]}, prevRec=false;
+let liveZoom=1, panX=0, panY=0, panPointer=null;
+
+function updateZoom(){
+  const live=$('#live'), viewer=$('#viewer');
+  const maxX=Math.max(0,(live.offsetWidth*liveZoom-viewer.clientWidth)/2);
+  const maxY=Math.max(0,(live.offsetHeight*liveZoom-viewer.clientHeight)/2);
+  panX=Math.max(-maxX,Math.min(maxX,panX));
+  panY=Math.max(-maxY,Math.min(maxY,panY));
+  live.style.transform=`translate3d(${panX}px,${panY}px,0) scale(${liveZoom})`;
+  viewer.classList.toggle('is-zoomed',liveZoom>1);
+  $('#zoomLevel').textContent=`${Math.round(liveZoom*100)}%`;
+}
+
+function setZoom(value){
+  liveZoom=Math.max(0.25,Math.min(4,Math.round(value*4)/4));
+  if(liveZoom<=1){panX=0;panY=0;}
+  updateZoom();
+}
+
+function changeZoom(amount){setZoom(liveZoom+amount);}
 
 function csrfToken(){
   const cookie=document.cookie.split('; ').find(item=>item.startsWith('csrftoken='));
@@ -211,6 +231,36 @@ $('#btnHwReset').addEventListener('click',async()=>{try{await api('/api/controls
 $('#btnSnap').addEventListener('click',snap);
 $('#btnRec').addEventListener('click',toggleRec);
 $('#btnFull').addEventListener('click',()=>{const v=$('#viewer');if(document.fullscreenElement)document.exitFullscreen();else v.requestFullscreen&&v.requestFullscreen();});
+$('#btnZoomIn').addEventListener('click',()=>changeZoom(0.25));
+$('#btnZoomOut').addEventListener('click',()=>changeZoom(-0.25));
+$('#btnZoomReset').addEventListener('click',()=>setZoom(1));
+$('#viewer').addEventListener('wheel',e=>{
+  if(!e.deltaY)return;
+  e.preventDefault();
+  changeZoom(e.deltaY<0?0.25:-0.25);
+},{passive:false});
+$('#live').addEventListener('pointerdown',e=>{
+  if(liveZoom<=1||e.button!==0)return;
+  panPointer={id:e.pointerId,x:e.clientX,y:e.clientY,panX,panY};
+  e.currentTarget.setPointerCapture(e.pointerId);
+  $('#viewer').classList.add('is-panning');
+  e.preventDefault();
+});
+$('#live').addEventListener('pointermove',e=>{
+  if(!panPointer||e.pointerId!==panPointer.id)return;
+  panX=panPointer.panX+e.clientX-panPointer.x;
+  panY=panPointer.panY+e.clientY-panPointer.y;
+  updateZoom();
+});
+function stopPanning(e){
+  if(!panPointer||e.pointerId!==panPointer.id)return;
+  panPointer=null;
+  $('#viewer').classList.remove('is-panning');
+  if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
+}
+$('#live').addEventListener('pointerup',stopPanning);
+$('#live').addEventListener('pointercancel',stopPanning);
+window.addEventListener('resize',updateZoom);
 $('#selDev').addEventListener('change',e=>setSetting({index:+e.target.value}));
 $('#selRes').addEventListener('change',e=>{const[w,h]=e.target.value.split('x');setSetting({width:+w,height:+h});});
 $('#selFps').addEventListener('change',e=>setSetting({fps:+e.target.value}));

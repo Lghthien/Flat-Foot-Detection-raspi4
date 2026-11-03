@@ -78,9 +78,9 @@ def _env_int(name, default):
 
 DS325_CAMERA_OPTIONS = {
     "index": _env_int("DS325_CAMERA_INDEX", 0),
-    "width": _env_int("DS325_CAMERA_WIDTH", 1280),
-    "height": _env_int("DS325_CAMERA_HEIGHT", 720),
-    "fps": _env_int("DS325_CAMERA_FPS", 30),
+    "width": _env_int("DS325_CAMERA_WIDTH", 640),
+    "height": _env_int("DS325_CAMERA_HEIGHT", 480),
+    "fps": _env_int("DS325_CAMERA_FPS", 15),
 }
 DS325_FFMPEG_PRESET = os.environ.get("DS325_FFMPEG_PRESET", "ultrafast")
 DS325_SHOW_ALL_DEVICES = os.environ.get("DS325_SHOW_ALL_DEVICES", "0") == "1"

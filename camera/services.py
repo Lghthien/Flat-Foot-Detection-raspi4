@@ -24,7 +24,7 @@ DEFAULTS = {
     "height": 720,
     "fps": 30,
     "format": "auto",
-    "jpeg_quality": 85,
+    "jpeg_quality": 75,
     "brightness": 0.0,
     "contrast": 1.0,
     "gamma": 1.5,
@@ -123,6 +123,18 @@ def list_devices(show_all=False):
     if not keep:
         keep = [d for d in devs if not d["internal"]] or devs
     return [{"index": d["index"], "name": d["name"]} for d in keep]
+
+
+def resolve_camera_index(index):
+    internal_device = re.compile(r"(bcm2835|rpi-|unicam|pispbe|rp1)", re.I)
+    camera_indexes = [
+        device["index"]
+        for device in list_devices()
+        if not internal_device.match(device["name"])
+    ]
+    if index in camera_indexes or not camera_indexes:
+        return index
+    return camera_indexes[0]
 
 
 CTRL_RE = re.compile(r"^\s*([a-z0-9_]+)\s+0x[0-9a-f]+\s+\((\w+)\)\s*:\s*(.*)$")
@@ -364,9 +376,14 @@ class CameraService:
 
     def _open(self):
         s = self.settings()
+        camera_index = resolve_camera_index(s["index"])
+        if camera_index != s["index"]:
+            s["index"] = camera_index
+            with self.lock:
+                self.s["index"] = camera_index
         prefs = {"auto": ["MJPG", None], "MJPG": ["MJPG"], "YUYV": ["YUYV"]}.get(s["format"], ["MJPG", None])
         for fmt in prefs:
-            cap = cv2.VideoCapture(s["index"], cv2.CAP_V4L2)
+            cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
             if not cap.isOpened():
                 cap.release()
                 continue

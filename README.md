@@ -46,10 +46,19 @@ Open `http://<Pi-IP>:8000`. The compatibility entry point
 `python ds325_cam.py` also starts Django's development server.
 Open `http://<Pi-IP>:8000/admin/` and sign in with the superuser created above
 to use Django Admin.
+On the camera page, use `+`/`−` or the mouse wheel to zoom the live preview
+from 25% to 400%; drag the zoomed image to inspect other areas and select
+`Đặt lại` to restore 100%.
 
 Camera settings can be supplied through environment variables:
 `DS325_CAMERA_INDEX`, `DS325_CAMERA_WIDTH`, `DS325_CAMERA_HEIGHT`,
 `DS325_CAMERA_FPS`, `DS325_FFMPEG_PRESET`, and `DS325_SHOW_ALL_DEVICES=1`.
+If the configured camera index is not a detected external camera, the app
+automatically selects the first detected external camera (for example
+`/dev/video1` on some Raspberry Pi setups).
+For lower live-view latency on Raspberry Pi, the defaults are 640x480 at 15 FPS,
+JPEG quality 75, and no sharpening. You can choose 1280x720 in the camera page
+when you prefer more detail, at the cost of higher CPU/network load.
 Media is stored in `media/photos` and `media/videos`; set `DS325_MEDIA_ROOT` to
 change the root directory.
 

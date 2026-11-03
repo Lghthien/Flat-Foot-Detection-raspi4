@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DS325 Studio</title>
 
-  <link rel="stylesheet" href="{% static 'camera/css/studio.css' %}">
+  <link rel="stylesheet" href="{% static 'camera/css/studio.css' %}?v=3">
 </head>
 <body>
 <header>
@@ -24,7 +24,7 @@
 <main>
   <section class="card">
     <div class="viewer" id="viewer">
-      <img id="live" alt="Hình trực tiếp từ camera">
+      <img id="live" alt="Hình trực tiếp từ camera" draggable="false">
       <div class="nosignal" id="nosignal"><div><b>Chưa có tín hiệu</b><span id="errText">Đang chờ camera…</span></div></div>
       <span class="chip l" id="chipRes">–</span>
       <span class="chip r hidden" id="chipRec"><i></i><span id="chipRecT">00:00</span></span>
@@ -33,6 +33,12 @@
       <button class="btn primary" id="btnSnap" data-i="cam">Chụp ảnh <kbd>S</kbd></button>
       <button class="btn danger" id="btnRec">Quay video <kbd>R</kbd></button>
       <button class="btn" id="btnFull" data-i="full">Toàn màn hình</button>
+      <div class="zoom-controls" aria-label="Điều khiển thu phóng hình ảnh">
+        <button class="btn sm" id="btnZoomOut" type="button" aria-label="Thu nhỏ hình ảnh" title="Thu nhỏ">−</button>
+        <output id="zoomLevel" aria-live="polite">100%</output>
+        <button class="btn sm" id="btnZoomIn" type="button" aria-label="Phóng to hình ảnh" title="Phóng to">+</button>
+        <button class="btn sm" id="btnZoomReset" type="button" aria-label="Đặt lại thu phóng" title="Đặt lại">Đặt lại</button>
+      </div>
     </div>
   </section>
 
@@ -88,6 +94,6 @@
 <div id="toast"></div>
 
 <div hidden>{% csrf_token %}</div>
-<script src="{% static 'camera/js/studio.js' %}?v=2" defer></script>
+<script src="{% static 'camera/js/studio.js' %}?v=4" defer></script>
 </body>
 </html>

@@ -22,10 +22,14 @@ h1{font-size:18px;margin:0;letter-spacing:.2px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;max-width:1560px;margin:0 auto;padding:0 22px 18px}
 @media(max-width:1000px){main{grid-template-columns:1fr}}
+@media(max-width:520px){.zoom-controls{margin-left:0}.toolbar .btn{padding:9px 11px}}
 .card{background:rgba(17,24,39,.72);border:1px solid var(--line);border-radius:var(--r);padding:16px;backdrop-filter:blur(10px)}
 .card h2{margin:0 0 12px;font-size:12px;letter-spacing:.9px;text-transform:uppercase;color:var(--mut);font-weight:600;display:flex;align-items:center;justify-content:space-between}
 .viewer{position:relative;background:#000;border-radius:12px;overflow:hidden;min-height:240px;display:grid;place-items:center}
 #live{display:block;width:100%;max-height:74vh;object-fit:contain}
+.viewer.is-zoomed #live{cursor:grab}
+.viewer.is-panning #live{cursor:grabbing;transition:none}
+.viewer #live{transform-origin:center;transition:transform .12s ease;touch-action:none;user-select:none}
 .nosignal{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mut);background:rgba(0,0,0,.6);padding:20px}
 .nosignal b{color:var(--txt);display:block;font-size:16px;margin-bottom:4px}
 .chip{position:absolute;top:12px;padding:4px 11px;border-radius:999px;background:rgba(0,0,0,.55);font-size:12px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
@@ -34,6 +38,8 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;max-width:1
 .flash::after{content:"";position:absolute;inset:0;background:#fff;animation:fl .3s forwards;pointer-events:none}
 @keyframes fl{from{opacity:.85}to{opacity:0}}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.zoom-controls{display:flex;align-items:center;gap:8px;margin-left:auto}
+.zoom-controls output{min-width:48px;text-align:center;color:var(--mut);font-variant-numeric:tabular-nums}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#172036;color:var(--txt);font:inherit;font-weight:600;cursor:pointer;transition:.15s}
 .btn:hover{transform:translateY(-1px);border-color:#34456f;background:#1c2744}
 .btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;box-shadow:0 6px 20px rgba(91,140,255,.3)}

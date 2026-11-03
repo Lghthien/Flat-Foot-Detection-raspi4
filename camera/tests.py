@@ -5,8 +5,44 @@ from unittest.mock import patch
 from django.test import Client, SimpleTestCase
 from django.urls import reverse
 
+from .services import DEFAULTS, resolve_camera_index
+
 
 class CameraPageTests(SimpleTestCase):
+    def test_stream_processing_defaults_favor_low_latency(self):
+        self.assertEqual(DEFAULTS["jpeg_quality"], 75)
+        self.assertEqual(DEFAULTS["sharpen"], 0.0)
+
+    @patch("camera.services.list_devices")
+    def test_missing_camera_index_falls_back_to_first_external_camera(
+        self, list_devices
+    ):
+        list_devices.return_value = [
+            {"index": 10, "name": "bcm2835-codec-decode"},
+            {"index": 1, "name": "Creative GestureCam"},
+            {"index": 2, "name": "Creative GestureCam"},
+        ]
+
+        self.assertEqual(resolve_camera_index(0), 1)
+
+    @patch("camera.services.list_devices")
+    def test_available_camera_index_is_preserved(self, list_devices):
+        list_devices.return_value = [
+            {"index": 1, "name": "Creative GestureCam"},
+            {"index": 2, "name": "Creative GestureCam"},
+        ]
+
+        self.assertEqual(resolve_camera_index(2), 2)
+
+    @patch("camera.services.list_devices")
+    def test_internal_devices_are_not_used_for_camera_fallback(self, list_devices):
+        list_devices.return_value = [
+            {"index": 10, "name": "bcm2835-codec-decode"},
+            {"index": 13, "name": "bcm2835-isp-output0"},
+        ]
+
+        self.assertEqual(resolve_camera_index(0), 0)
+
     def test_homepage_renders_studio(self):
         response = self.client.get(reverse("index"))
 
