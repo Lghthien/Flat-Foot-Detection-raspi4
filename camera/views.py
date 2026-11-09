@@ -40,9 +40,9 @@ def _request_data(request):
     try:
         data = json.loads(request.body or b"{}")
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ApiError(400, "Dữ liệu JSON không hợp lệ") from error
+        raise ApiError(400, "Invalid JSON data") from error
     if not isinstance(data, dict):
-        raise ApiError(400, "Dữ liệu phải là một đối tượng JSON")
+        raise ApiError(400, "Data must be a JSON object")
     return data
 
 
@@ -113,7 +113,7 @@ def api_control(request):
     except ApiError as error:
         return _json_error(error)
     except (TypeError, ValueError):
-        return JsonResponse({"error": "Giá trị điều khiển không hợp lệ"}, status=400)
+        return JsonResponse({"error": "Invalid control value"}, status=400)
 
 
 @require_POST
@@ -138,7 +138,7 @@ def api_media_delete(request):
         data = _request_data(request)
         path = _media_path(str(data.get("kind", "")), str(data.get("name", "")))
         if camera.rec.active and path.name == camera.rec.name:
-            raise ApiError(409, "Tệp đang được ghi")
+            raise ApiError(409, "The file is currently being recorded")
         path.unlink()
         return JsonResponse({"ok": True})
     except ApiError as error:
@@ -185,10 +185,10 @@ def _media_path(kind, name):
     folders = {"photos": PHOTO_DIR, "videos": VIDEO_DIR}
     folder = folders.get(kind)
     if folder is None:
-        raise Http404("Không tìm thấy")
+        raise Http404("Not found")
     path = folder / Path(name).name
     if not path.is_file():
-        raise Http404("Không tìm thấy tệp")
+        raise Http404("File not found")
     return path
 
 

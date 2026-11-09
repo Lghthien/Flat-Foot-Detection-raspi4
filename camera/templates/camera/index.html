@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,7 +15,7 @@
     <div><h1>DS325 Studio</h1><p>Raspberry Pi 4 · SoftKinetic DepthSense 325</p></div>
   </div>
   <div class="pills">
-    <span class="pill" id="pillCam"><i></i><b id="pillCamT">Đang kết nối…</b></span>
+    <span class="pill" id="pillCam"><i></i><b id="pillCamT">Connecting…</b></span>
     <span class="pill" id="pillFps">– FPS</span>
     <span class="pill rec hidden" id="pillRec"><i></i><b id="pillRecT">REC</b></span>
   </div>
@@ -24,20 +24,20 @@
 <main>
   <section class="card">
     <div class="viewer" id="viewer">
-      <img id="live" alt="Hình trực tiếp từ camera" draggable="false">
-      <div class="nosignal" id="nosignal"><div><b>Chưa có tín hiệu</b><span id="errText">Đang chờ camera…</span></div></div>
+      <img id="live" alt="Live camera feed" draggable="false">
+      <div class="nosignal" id="nosignal"><div><b>No signal</b><span id="errText">Waiting for camera…</span></div></div>
       <span class="chip l" id="chipRes">–</span>
       <span class="chip r hidden" id="chipRec"><i></i><span id="chipRecT">00:00</span></span>
     </div>
     <div class="toolbar">
-      <button class="btn primary" id="btnSnap" data-i="cam">Chụp ảnh <kbd>S</kbd></button>
-      <button class="btn danger" id="btnRec">Quay video <kbd>R</kbd></button>
-      <button class="btn" id="btnFull" data-i="full">Toàn màn hình</button>
-      <div class="zoom-controls" aria-label="Điều khiển thu phóng hình ảnh">
-        <button class="btn sm" id="btnZoomOut" type="button" aria-label="Thu nhỏ hình ảnh" title="Thu nhỏ">−</button>
+      <button class="btn primary" id="btnSnap" data-i="cam">Capture photo <kbd>S</kbd></button>
+      <button class="btn danger" id="btnRec">Record video <kbd>R</kbd></button>
+      <button class="btn" id="btnFull" data-i="full">Fullscreen</button>
+      <div class="zoom-controls" aria-label="Image zoom controls">
+        <button class="btn sm" id="btnZoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button>
         <output id="zoomLevel" aria-live="polite">100%</output>
-        <button class="btn sm" id="btnZoomIn" type="button" aria-label="Phóng to hình ảnh" title="Phóng to">+</button>
-        <button class="btn sm" id="btnZoomReset" type="button" aria-label="Đặt lại thu phóng" title="Đặt lại">Đặt lại</button>
+        <button class="btn sm" id="btnZoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+        <button class="btn sm" id="btnZoomReset" type="button" aria-label="Reset zoom" title="Reset">Reset</button>
       </div>
     </div>
   </section>
@@ -45,35 +45,35 @@
   <aside class="side">
     <div class="card">
       <h2>Camera</h2>
-      <label class="f">Thiết bị<select id="selDev"></select></label>
+      <label class="f">Device<select id="selDev"></select></label>
       <div class="grid2" style="margin-top:10px">
-        <label class="f">Độ phân giải<select id="selRes">
+        <label class="f">Resolution<select id="selRes">
           <option value="320x240">320×240</option><option value="640x480">640×480</option><option value="1280x720">1280×720 (HD)</option>
         </select></label>
         <label class="f">FPS<select id="selFps"><option>5</option><option>10</option><option>15</option><option>24</option><option>30</option></select></label>
       </div>
-      <label class="f" style="margin-top:10px">Định dạng thu<select id="selFmt">
-        <option value="auto">Tự động (ưu tiên MJPG)</option><option value="MJPG">MJPG</option><option value="YUYV">YUYV</option></select></label>
-      <div class="row"><label for="jq">Chất lượng JPEG (stream)</label><output id="o_jq"></output><input type="range" id="jq" min="40" max="100" step="1"></div>
+      <label class="f" style="margin-top:10px">Capture format<select id="selFmt">
+        <option value="auto">Automatic (prefer MJPG)</option><option value="MJPG">MJPG</option><option value="YUYV">YUYV</option></select></label>
+      <div class="row"><label for="jq">JPEG quality (stream)</label><output id="o_jq"></output><input type="range" id="jq" min="40" max="100" step="1"></div>
     </div>
 
     <div class="card">
-      <h2>Hình ảnh <button class="btn sm" id="btnSwReset" data-i="reset">Đặt lại</button></h2>
+      <h2>Image <button class="btn sm" id="btnSwReset" data-i="reset">Reset</button></h2>
       <div class="presets">
-        <button class="btn sm" data-preset="natural">Tự nhiên</button>
-        <button class="btn sm" data-preset="bright">Sáng hơn</button>
-        <button class="btn sm" data-preset="lowlight">Thiếu sáng</button>
+        <button class="btn sm" data-preset="natural">Natural</button>
+        <button class="btn sm" data-preset="bright">Brighter</button>
+        <button class="btn sm" data-preset="lowlight">Low light</button>
       </div>
       <div id="swControls"></div>
-      <div class="toggle"><span>Tăng chi tiết vùng tối (CLAHE)</span><input type="checkbox" id="t_clahe"></div>
-      <div class="toggle"><span>Lật ngang</span><input type="checkbox" id="t_flip_h"></div>
-      <div class="toggle"><span>Lật dọc</span><input type="checkbox" id="t_flip_v"></div>
-      <label class="f" style="margin-top:6px">Xoay<select id="selRot"><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
-      <p class="note">Các chỉnh sửa này áp dụng cho cả ảnh chụp và video.</p>
+      <div class="toggle"><span>Enhance shadow detail (CLAHE)</span><input type="checkbox" id="t_clahe"></div>
+      <div class="toggle"><span>Flip horizontally</span><input type="checkbox" id="t_flip_h"></div>
+      <div class="toggle"><span>Flip vertically</span><input type="checkbox" id="t_flip_v"></div>
+      <label class="f" style="margin-top:6px">Rotate<select id="selRot"><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
+      <p class="note">These adjustments apply to both photos and videos.</p>
     </div>
 
     <div class="card" id="hwCard">
-      <h2>Phần cứng camera <button class="btn sm" id="btnHwReset" data-i="reset">Mặc định</button></h2>
+      <h2>Camera hardware <button class="btn sm" id="btnHwReset" data-i="reset">Defaults</button></h2>
       <div id="hwControls"></div>
       <p class="note" id="hwNote"></p>
     </div>
@@ -82,11 +82,11 @@
 
 <section class="card gallery">
   <div class="tabs">
-    <button class="tab on" data-tab="photos">Ảnh<span id="cntP">0</span></button>
+    <button class="tab on" data-tab="photos">Photos<span id="cntP">0</span></button>
     <button class="tab" data-tab="videos">Video<span id="cntV">0</span></button>
     <span class="path" id="pathHint"></span>
   </div>
-  <p class="note hidden" id="ffNote">Chưa cài ffmpeg nên video được lưu dạng .avi và trình duyệt không phát được. Chạy: sudo apt install ffmpeg</p>
+  <p class="note hidden" id="ffNote">FFmpeg is not installed, so videos are saved as .avi files that cannot be played in the browser. Install it with: sudo apt install ffmpeg</p>
   <div id="grid"></div>
 </section>
 

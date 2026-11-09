@@ -76,7 +76,7 @@ def clean_value(key, val):
         for o in spec[1]:
             if str(o) == str(val):
                 return o
-    raise ValueError("Giá trị không hợp lệ cho %s" % key)
+    raise ValueError("Invalid value for %s" % key)
 
 
 def unique_path(folder, prefix, ext):
@@ -97,10 +97,10 @@ def local_ip():
         s.close()
         return ip
     except OSError:
-        return "<IP-của-Pi>"
+        return "<Pi-IP>"
 
 
-# ----------------------------------------------------------------- thiết bị V4L2
+# ----------------------------------------------------------------- V4L2 devices
 def list_devices(show_all=False):
     devs = []
     paths = glob.glob("/sys/class/video4linux/video*")
@@ -178,18 +178,18 @@ def v4l2_controls(index):
 def v4l2_set(index, name, value):
     exe = shutil.which("v4l2-ctl")
     if not exe:
-        raise ApiError(400, "Chưa cài v4l-utils (sudo apt install v4l-utils)")
+        raise ApiError(400, "v4l-utils is not installed (sudo apt install v4l-utils)")
     if not re.fullmatch(r"[a-z0-9_]+", name):
-        raise ApiError(400, "Tên điều khiển không hợp lệ")
+        raise ApiError(400, "Invalid control name")
     r = subprocess.run([exe, "-d", "/dev/video%d" % index, "--set-ctrl", "%s=%d" % (name, int(value))],
                        capture_output=True, text=True, timeout=5)
     if r.returncode != 0:
-        raise ApiError(400, r.stderr.strip() or "v4l2-ctl báo lỗi")
+        raise ApiError(400, r.stderr.strip() or "v4l2-ctl reported an error")
 
 
-# ----------------------------------------------------------------- xử lý ảnh
+# ----------------------------------------------------------------- image processing
 def to_bgr(frame):
-    """Đưa mọi kiểu frame về ảnh BGR uint8 để xử lý/hiển thị."""
+    """Convert any frame format to a BGR uint8 image for processing and display."""
     if frame is None:
         return None
     if frame.dtype == np.uint8 and frame.ndim == 3 and frame.shape[2] == 3:
@@ -226,10 +226,10 @@ class Recorder:
 
     def start(self):
         if self.active:
-            raise ApiError(409, "Đang quay video rồi")
+            raise ApiError(409, "Video recording is already in progress")
         img = self.cam.latest
         if img is None:
-            raise ApiError(503, "Chưa có hình từ camera")
+            raise ApiError(503, "No image is available from the camera")
         h, w = img.shape[:2]
         w -= w % 2
         h -= h % 2
@@ -245,7 +245,7 @@ class Recorder:
         else:
             self._writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"MJPG"), fps, (w, h))
             if not self._writer.isOpened():
-                raise ApiError(500, "Không tạo được file video")
+                raise ApiError(500, "Could not create the video file")
         self.name = path.name
         self.size = (w, h)
         self.fps = fps
@@ -297,7 +297,7 @@ class Recorder:
 
     def stop(self):
         if not self.active:
-            raise ApiError(409, "Chưa quay video")
+            raise ApiError(409, "No video is currently being recorded")
         name = self.name
         self._stop.set()
         if self._thread:
@@ -327,7 +327,7 @@ class CameraService:
         self._clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         self._thread = threading.Thread(target=self._loop, daemon=True)
 
-    # --- cấu hình
+    # --- settings
     def get(self, key):
         with self.lock:
             return self.s[key]
@@ -343,17 +343,17 @@ class CameraService:
                 try:
                     new[k] = clean_value(k, v)
                 except (ValueError, TypeError):
-                    raise ApiError(400, "Giá trị không hợp lệ cho %s" % k)
+                    raise ApiError(400, "Invalid value for %s" % k)
         with self.lock:
             restart = [k for k in new if k in RESTART_KEYS and new[k] != self.s.get(k)]
         if restart and self.rec.active:
-            raise ApiError(409, "Hãy dừng quay video trước khi đổi camera/độ phân giải/FPS")
+            raise ApiError(409, "Stop recording before changing the camera, resolution, or FPS")
         with self.lock:
             self.s.update(new)
         if restart:
             self.restart.set()
 
-    # --- vòng lặp camera
+    # --- camera loop
     def start(self):
         self._thread.start()
 
@@ -425,7 +425,7 @@ class CameraService:
                 self.info["ok"] = False
                 cap = self._open()
                 if cap is None:
-                    self.error = "Không mở được /dev/video%d (hoặc không đọc được hình)" % self.get("index")
+                    self.error = "Could not open /dev/video%d or read a frame" % self.get("index")
                     time.sleep(1.0)
                     continue
                 self.error = ""
@@ -438,7 +438,7 @@ class CameraService:
                     cap.release()
                     cap = None
                     self.info["ok"] = False
-                    self.error = "Mất tín hiệu camera, đang thử kết nối lại..."
+                    self.error = "Camera signal lost; attempting to reconnect..."
                 time.sleep(0.02)
                 continue
             fail = 0
@@ -450,8 +450,8 @@ class CameraService:
                 self.fps = inst if self.fps == 0 else self.fps * 0.9 + inst * 0.1
             try:
                 out = self.process(frame)
-            except Exception as e:  # không để một frame lỗi làm sập luồng
-                self.error = "Lỗi xử lý ảnh: %s" % e
+            except Exception as e:  # Keep a bad frame from stopping the camera loop.
+                self.error = "Image processing error: %s" % e
                 continue
             jpg = None
             if self.clients > 0:
@@ -471,7 +471,7 @@ class CameraService:
         s = self.settings()
         img = to_bgr(frame)
         if img is None:
-            raise ValueError("frame rỗng")
+            raise ValueError("Empty frame")
         rot = s["rotate"]
         if rot == 90:
             img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
@@ -485,7 +485,7 @@ class CameraService:
             img = cv2.flip(img, 1)
         elif s["flip_v"]:
             img = cv2.flip(img, 0)
-        # gamma + tương phản + độ sáng gộp trong một bảng tra LUT
+        # Combine gamma, contrast, and brightness in a single lookup table.
         key = (round(s["gamma"], 3), round(s["contrast"], 3), round(s["brightness"], 2))
         if key != self._lut_key:
             x = np.arange(256, dtype=np.float32) / 255.0
@@ -508,11 +508,11 @@ class CameraService:
             img = cv2.addWeighted(img, 1.0 + s["sharpen"], blur, -s["sharpen"], 0)
         return img
 
-    # --- hành động
+    # --- actions
     def snapshot(self):
         img = self.latest
         if img is None:
-            raise ApiError(503, "Chưa có hình từ camera")
+            raise ApiError(503, "No image is available from the camera")
         path = unique_path(PHOTO_DIR, "photo", "jpg")
         cv2.imwrite(str(path), img, [cv2.IMWRITE_JPEG_QUALITY, 95])
         return path.name

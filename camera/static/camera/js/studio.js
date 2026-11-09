@@ -11,11 +11,11 @@ const ICON={
  reset:I('<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>')
 };
 const SW=[
- {k:'brightness',t:'Độ sáng',min:-100,max:100,step:1},
- {k:'gamma',t:'Gamma (làm sáng vùng tối)',min:0.5,max:3,step:0.05},
- {k:'contrast',t:'Tương phản',min:0.5,max:2,step:0.05},
- {k:'saturation',t:'Độ bão hòa màu',min:0,max:2,step:0.05},
- {k:'sharpen',t:'Làm nét',min:0,max:2,step:0.05}
+ {k:'brightness',t:'Brightness',min:-100,max:100,step:1},
+ {k:'gamma',t:'Gamma (brighten shadows)',min:0.5,max:3,step:0.05},
+ {k:'contrast',t:'Contrast',min:0.5,max:2,step:0.05},
+ {k:'saturation',t:'Saturation',min:0,max:2,step:0.05},
+ {k:'sharpen',t:'Sharpen',min:0,max:2,step:0.05}
 ];
 const PRESETS={
  natural:{gamma:1,brightness:0,contrast:1,saturation:1,sharpen:0,clahe:false},
@@ -56,7 +56,7 @@ async function api(path,body){
   if(csrf)headers['X-CSRFToken']=csrf;
   const opt=body===undefined?{}:{method:'POST',headers,body:JSON.stringify(body)};
   const r=await fetch(path,opt); let j={}; try{j=await r.json()}catch(e){}
-  if(!r.ok) throw new Error(j.error||('Lỗi '+r.status));
+  if(!r.ok) throw new Error(j.error||('Error '+r.status));
   return j;
 }
 let tt;
@@ -107,25 +107,25 @@ function renderStatus(){
   if(!st)return;
   const ok=st.ok;
   $('#pillCam').className='pill '+(ok?'ok':'bad');
-  $('#pillCamT').textContent=ok?'Camera hoạt động':'Mất tín hiệu';
+  $('#pillCamT').textContent=ok?'Camera connected':'Signal lost';
   $('#pillFps').textContent=(st.fps||0)+' FPS';
   $('#nosignal').classList.toggle('hidden',ok);
-  $('#errText').textContent=st.error||'Đang chờ camera…';
+  $('#errText').textContent=st.error||'Waiting for camera…';
   $('#chipRes').textContent=ok&&st.width?`${st.width}×${st.height} · ${st.fourcc||'?'}`:'–';
   const rec=st.recording;
   $('#pillRec').classList.toggle('hidden',!rec);$('#chipRec').classList.toggle('hidden',!rec);
   if(rec){$('#pillRecT').textContent='REC '+mmss(st.rec_seconds);$('#chipRecT').textContent=mmss(st.rec_seconds);}
   const b=$('#btnRec');b.classList.toggle('on',rec);
-  b.innerHTML=(rec?ICON.stop:ICON.rec)+(rec?' Dừng quay':' Quay video')+' <kbd>R</kbd>';
+  b.innerHTML=(rec?ICON.stop:ICON.rec)+(rec?' Stop recording':' Record video')+' <kbd>R</kbd>';
   if(prevRec&&!rec){loadMedia();}
   prevRec=rec;
   $('#ffNote').classList.toggle('hidden',st.ffmpeg);
-  $('#pathHint').textContent='Lưu tại: '+(tab==='photos'?st.paths.photos:st.paths.videos);
+  $('#pathHint').textContent='Saved to: '+(tab==='photos'?st.paths.photos:st.paths.videos);
 }
 
 async function pollStatus(){
   try{st=await api('/api/status');renderStatus();}
-  catch(e){$('#pillCam').className='pill bad';$('#pillCamT').textContent='Mất kết nối Pi';}
+  catch(e){$('#pillCam').className='pill bad';$('#pillCamT').textContent='Lost connection to Pi';}
   setTimeout(pollStatus,1000);
 }
 
@@ -136,13 +136,13 @@ async function snap(){
   try{
     const r=await api('/api/snapshot',{});
     const v=$('#viewer');v.classList.remove('flash');void v.offsetWidth;v.classList.add('flash');
-    toast('Đã lưu ảnh: '+r.name,'good');loadMedia();
+    toast('Photo saved: '+r.name,'good');loadMedia();
   }catch(e){toast(e.message,'err');}
 }
 async function toggleRec(){
   try{
-    if(st&&st.recording){const r=await api('/api/record/stop',{});toast('Đã lưu video: '+r.name,'good');}
-    else{const r=await api('/api/record/start',{});toast('Bắt đầu quay: '+r.name,'good');}
+    if(st&&st.recording){const r=await api('/api/record/stop',{});toast('Video saved: '+r.name,'good');}
+    else{const r=await api('/api/record/start',{});toast('Recording started: '+r.name,'good');}
     st=await api('/api/status');renderStatus();loadMedia();
   }catch(e){toast(e.message,'err');}
 }
@@ -160,8 +160,8 @@ async function loadControls(){
   const box=$('#hwControls'),note=$('#hwNote');
   try{
     const r=await api('/api/controls');box.innerHTML='';note.textContent='';
-    if(!r.available){note.textContent='Cần cài v4l-utils: sudo apt install v4l-utils';return;}
-    if(!r.controls.length){note.textContent='Thiết bị này không có điều khiển phần cứng nào qua V4L2.';return;}
+    if(!r.available){note.textContent='Install v4l-utils: sudo apt install v4l-utils';return;}
+    if(!r.controls.length){note.textContent='This device has no V4L2 hardware controls.';return;}
     r.controls.forEach(c=>{
       const d=document.createElement('div');
       if(c.type==='int'){
@@ -181,7 +181,7 @@ async function loadControls(){
       }
       box.appendChild(d);
     });
-  }catch(e){note.textContent='Không đọc được điều khiển phần cứng.';}
+  }catch(e){note.textContent='Could not read the hardware controls.';}
 }
 async function sendHW(name,value){
   try{await api('/api/control',{name,value:+value});setTimeout(loadControls,250);}
@@ -192,20 +192,20 @@ async function loadMedia(){try{media=await api('/api/media');renderGallery();}ca
 function renderGallery(){
   const list=media[tab]||[],g=$('#grid');
   $('#cntP').textContent=(media.photos||[]).length;$('#cntV').textContent=(media.videos||[]).length;
-  if(st)$('#pathHint').textContent='Lưu tại: '+(tab==='photos'?st.paths.photos:st.paths.videos);
-  if(!list.length){g.innerHTML='<div class="empty">Chưa có '+(tab==='photos'?'ảnh':'video')+' nào.</div>';return;}
+  if(st)$('#pathHint').textContent='Saved to: '+(tab==='photos'?st.paths.photos:st.paths.videos);
+  if(!list.length){g.innerHTML='<div class="empty">No '+(tab==='photos'?'photos':'videos')+' yet.</div>';return;}
   g.innerHTML=list.map(m=>{
     const th=tab==='photos'?`<img loading="lazy" src="${m.url}" alt="">`:(m.name.endsWith('.mp4')?`<video preload="metadata" muted playsinline src="${m.url}#t=0.1"></video>`:'<div class="avi">AVI</div>');
     return `<div class="item"><div class="thumb" data-open="${m.url}" data-name="${m.name}">${th}</div>
-      <div class="meta"><div><b>${m.name}</b><small>${fmtSize(m.size)} · ${new Date(m.mtime*1000).toLocaleString('vi-VN')}</small></div>
-      <div class="acts"><a class="ib" href="${m.url}?dl=1" title="Tải xuống">${ICON.dl}</a><button class="ib del" data-del="${m.name}" title="Xóa">${ICON.trash}</button></div></div></div>`;
+      <div class="meta"><div><b>${m.name}</b><small>${fmtSize(m.size)} · ${new Date(m.mtime*1000).toLocaleString('en-US')}</small></div>
+      <div class="acts"><a class="ib" href="${m.url}?dl=1" title="Download">${ICON.dl}</a><button class="ib del" data-del="${m.name}" title="Delete">${ICON.trash}</button></div></div></div>`;
   }).join('');
 }
 $('#grid').addEventListener('click',async e=>{
   const o=e.target.closest('[data-open]');
   if(o){openModal(o.dataset.open,o.dataset.name);return;}
   const d=e.target.closest('[data-del]');
-  if(d&&confirm('Xóa tệp '+d.dataset.del+'?')){
+  if(d&&confirm('Delete file '+d.dataset.del+'?')){
     try{await api('/api/media/delete',{kind:tab,name:d.dataset.del});loadMedia();}catch(err){toast(err.message,'err');}
   }
 });
@@ -213,7 +213,7 @@ function openModal(url,name){
   const box=$('#modalBox');
   if(tab==='photos')box.innerHTML=`<img src="${url}" alt="">`;
   else if(name.endsWith('.mp4'))box.innerHTML=`<video src="${url}" controls autoplay></video>`;
-  else box.innerHTML=`<div class="card">Định dạng .avi không phát được trong trình duyệt.<br><a class="btn" style="margin-top:10px" href="${url}?dl=1">Tải xuống</a></div>`;
+  else box.innerHTML=`<div class="card">.avi files cannot be played in the browser.<br><a class="btn" style="margin-top:10px" href="${url}?dl=1">Download</a></div>`;
   $('#modal').classList.add('show');
 }
 function closeModal(){$('#modal').classList.remove('show');$('#modalBox').innerHTML='';}
@@ -227,7 +227,7 @@ document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click'
   const p=PRESETS[b.dataset.preset];setSetting(p);syncUI(Object.assign({},st.settings,p));
 }));
 $('#btnSwReset').addEventListener('click',()=>{const p=PRESETS.natural;setSetting(Object.assign({flip_h:false,flip_v:false,rotate:0},p));syncUI(Object.assign({},st.settings,p,{flip_h:false,flip_v:false,rotate:0}));});
-$('#btnHwReset').addEventListener('click',async()=>{try{await api('/api/controls/reset',{});toast('Đã đặt lại thông số phần cứng','good');loadControls();}catch(e){toast(e.message,'err');}});
+$('#btnHwReset').addEventListener('click',async()=>{try{await api('/api/controls/reset',{});toast('Hardware settings reset','good');loadControls();}catch(e){toast(e.message,'err');}});
 $('#btnSnap').addEventListener('click',snap);
 $('#btnRec').addEventListener('click',toggleRec);
 $('#btnFull').addEventListener('click',()=>{const v=$('#viewer');if(document.fullscreenElement)document.exitFullscreen();else v.requestFullscreen&&v.requestFullscreen();});

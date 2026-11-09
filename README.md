@@ -48,7 +48,7 @@ Open `http://<Pi-IP>:8000/admin/` and sign in with the superuser created above
 to use Django Admin.
 On the camera page, use `+`/`−` or the mouse wheel to zoom the live preview
 from 25% to 400%; drag the zoomed image to inspect other areas and select
-`Đặt lại` to restore 100%.
+`Reset` to restore 100%.
 
 Camera settings can be supplied through environment variables:
 `DS325_CAMERA_INDEX`, `DS325_CAMERA_WIDTH`, `DS325_CAMERA_HEIGHT`,
