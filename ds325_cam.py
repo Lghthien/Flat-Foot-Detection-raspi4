@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compatibility launcher for the Django-based DS325 Studio."""
+
 import os
 import sys
-
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ds325_project.settings")

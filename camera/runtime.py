@@ -6,7 +6,6 @@ from django.conf import settings
 
 from .services import CameraService, PHOTO_DIR, VIDEO_DIR
 
-
 _camera = None
 _camera_lock = threading.Lock()
 

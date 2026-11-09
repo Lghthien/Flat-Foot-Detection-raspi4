@@ -4,7 +4,13 @@ import re
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    JsonResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import render
 from django.utils.http import content_disposition_header
 from django.views.decorators.cache import never_cache
@@ -53,9 +59,7 @@ def api_status(request):
 
 @require_GET
 def api_devices(request):
-    return JsonResponse(
-        {"devices": list_devices(settings.DS325_SHOW_ALL_DEVICES)}
-    )
+    return JsonResponse({"devices": list_devices(settings.DS325_SHOW_ALL_DEVICES)})
 
 
 @require_GET
@@ -202,7 +206,9 @@ def media_file(request, kind, name):
     if range_header:
         match = re.fullmatch(r"bytes=(\d*)-(\d*)", range_header.strip())
         if not match or size == 0:
-            return HttpResponse(status=416, headers={"Content-Range": f"bytes */{size}"})
+            return HttpResponse(
+                status=416, headers={"Content-Range": f"bytes */{size}"}
+            )
         first, last = match.groups()
         try:
             if first:
@@ -217,9 +223,13 @@ def media_file(request, kind, name):
                     headers={"Content-Range": f"bytes */{size}"},
                 )
         except ValueError:
-            return HttpResponse(status=416, headers={"Content-Range": f"bytes */{size}"})
+            return HttpResponse(
+                status=416, headers={"Content-Range": f"bytes */{size}"}
+            )
         if start > end or start >= size:
-            return HttpResponse(status=416, headers={"Content-Range": f"bytes */{size}"})
+            return HttpResponse(
+                status=416, headers={"Content-Range": f"bytes */{size}"}
+            )
         status = 206
 
     media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
@@ -236,7 +246,9 @@ def media_file(request, kind, name):
             filename=path.name,
         )
     if end >= start:
-        response.streaming_content = _limited_file(response.streaming_content, end - start + 1)
+        response.streaming_content = _limited_file(
+            response.streaming_content, end - start + 1
+        )
     return response
 
 

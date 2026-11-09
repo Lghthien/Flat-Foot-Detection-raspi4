@@ -146,8 +146,12 @@ def v4l2_controls(index):
     if not exe:
         return None
     try:
-        out = subprocess.run([exe, "-d", "/dev/video%d" % index, "--list-ctrls-menus"],
-                             capture_output=True, text=True, timeout=5).stdout
+        out = subprocess.run(
+            [exe, "-d", "/dev/video%d" % index, "--list-ctrls-menus"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        ).stdout
     except Exception:
         return []
     ctrls = []
@@ -159,11 +163,18 @@ def v4l2_controls(index):
             if typ not in ("int", "bool", "menu"):
                 cur = None
                 continue
-            kv = {k: int(v) for k, v in re.findall(r"\b(min|max|step|default|value)=(-?\d+)", rest)}
+            kv = {
+                k: int(v)
+                for k, v in re.findall(r"\b(min|max|step|default|value)=(-?\d+)", rest)
+            }
             cur = {
-                "name": name, "type": typ,
-                "min": kv.get("min", 0), "max": kv.get("max", 1), "step": kv.get("step", 1) or 1,
-                "default": kv.get("default", 0), "value": kv.get("value", kv.get("default", 0)),
+                "name": name,
+                "type": typ,
+                "min": kv.get("min", 0),
+                "max": kv.get("max", 1),
+                "step": kv.get("step", 1) or 1,
+                "default": kv.get("default", 0),
+                "value": kv.get("value", kv.get("default", 0)),
                 "inactive": ("inactive" in rest) or ("read-only" in rest),
                 "menu": [],
             }
@@ -181,8 +192,12 @@ def v4l2_set(index, name, value):
         raise ApiError(400, "v4l-utils is not installed (sudo apt install v4l-utils)")
     if not re.fullmatch(r"[a-z0-9_]+", name):
         raise ApiError(400, "Invalid control name")
-    r = subprocess.run([exe, "-d", "/dev/video%d" % index, "--set-ctrl", "%s=%d" % (name, int(value))],
-                       capture_output=True, text=True, timeout=5)
+    r = subprocess.run(
+        [exe, "-d", "/dev/video%d" % index, "--set-ctrl", "%s=%d" % (name, int(value))],
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
     if r.returncode != 0:
         raise ApiError(400, r.stderr.strip() or "v4l2-ctl reported an error")
 
@@ -237,13 +252,40 @@ class Recorder:
         ext = "mp4" if self.ffmpeg else "avi"
         path = unique_path(VIDEO_DIR, "video", ext)
         if self.ffmpeg:
-            cmd = [self.ffmpeg, "-y", "-loglevel", "error",
-                   "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", "%dx%d" % (w, h), "-r", str(fps), "-i", "-",
-                   "-c:v", "libx264", "-preset", self.preset, "-crf", "23", "-pix_fmt", "yuv420p",
-                   "-movflags", "+faststart", str(path)]
-            self._proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            cmd = [
+                self.ffmpeg,
+                "-y",
+                "-loglevel",
+                "error",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "bgr24",
+                "-s",
+                "%dx%d" % (w, h),
+                "-r",
+                str(fps),
+                "-i",
+                "-",
+                "-c:v",
+                "libx264",
+                "-preset",
+                self.preset,
+                "-crf",
+                "23",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                str(path),
+            ]
+            self._proc = subprocess.Popen(
+                cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL
+            )
         else:
-            self._writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"MJPG"), fps, (w, h))
+            self._writer = cv2.VideoWriter(
+                str(path), cv2.VideoWriter_fourcc(*"MJPG"), fps, (w, h)
+            )
             if not self._writer.isOpened():
                 raise ApiError(500, "Could not create the video file")
         self.name = path.name
@@ -347,7 +389,9 @@ class CameraService:
         with self.lock:
             restart = [k for k in new if k in RESTART_KEYS and new[k] != self.s.get(k)]
         if restart and self.rec.active:
-            raise ApiError(409, "Stop recording before changing the camera, resolution, or FPS")
+            raise ApiError(
+                409, "Stop recording before changing the camera, resolution, or FPS"
+            )
         with self.lock:
             self.s.update(new)
         if restart:
@@ -381,7 +425,9 @@ class CameraService:
             s["index"] = camera_index
             with self.lock:
                 self.s["index"] = camera_index
-        prefs = {"auto": ["MJPG", None], "MJPG": ["MJPG"], "YUYV": ["YUYV"]}.get(s["format"], ["MJPG", None])
+        prefs = {"auto": ["MJPG", None], "MJPG": ["MJPG"], "YUYV": ["YUYV"]}.get(
+            s["format"], ["MJPG", None]
+        )
         for fmt in prefs:
             cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
             if not cap.isOpened():
@@ -404,7 +450,9 @@ class CameraService:
                 code = int(cap.get(cv2.CAP_PROP_FOURCC))
                 self.info = {
                     "ok": True,
-                    "fourcc": "".join(chr((code >> (8 * i)) & 0xFF) for i in range(4)).strip(),
+                    "fourcc": "".join(
+                        chr((code >> (8 * i)) & 0xFF) for i in range(4)
+                    ).strip(),
                     "width": int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
                     "height": int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
                 }
@@ -425,7 +473,10 @@ class CameraService:
                 self.info["ok"] = False
                 cap = self._open()
                 if cap is None:
-                    self.error = "Could not open /dev/video%d or read a frame" % self.get("index")
+                    self.error = (
+                        "Could not open /dev/video%d or read a frame"
+                        % self.get("index")
+                    )
                     time.sleep(1.0)
                     continue
                 self.error = ""
@@ -455,7 +506,9 @@ class CameraService:
                 continue
             jpg = None
             if self.clients > 0:
-                ok2, buf = cv2.imencode(".jpg", out, [cv2.IMWRITE_JPEG_QUALITY, self.get("jpeg_quality")])
+                ok2, buf = cv2.imencode(
+                    ".jpg", out, [cv2.IMWRITE_JPEG_QUALITY, self.get("jpeg_quality")]
+                )
                 if ok2:
                     jpg = buf.tobytes()
             with self.cond:
@@ -519,7 +572,7 @@ class CameraService:
 
     def status(self):
         img = self.latest
-        h, w = (img.shape[:2] if img is not None else (0, 0))
+        h, w = img.shape[:2] if img is not None else (0, 0)
         rec = self.rec
         return {
             "ok": self.info["ok"],
@@ -541,14 +594,22 @@ class CameraService:
 def media_list(cam):
     cur = cam.rec.name if cam.rec.active else None
     out = {"photos": [], "videos": []}
-    for kind, folder, exts in (("photos", PHOTO_DIR, (".jpg", ".jpeg", ".png")),
-                               ("videos", VIDEO_DIR, (".mp4", ".avi", ".webm"))):
+    for kind, folder, exts in (
+        ("photos", PHOTO_DIR, (".jpg", ".jpeg", ".png")),
+        ("videos", VIDEO_DIR, (".mp4", ".avi", ".webm")),
+    ):
         items = []
         for p in folder.iterdir():
             if p.suffix.lower() in exts and p.name != cur:
                 st = p.stat()
-                items.append({"name": p.name, "size": st.st_size, "mtime": st.st_mtime,
-                              "url": "/media/%s/%s" % (kind, p.name)})
+                items.append(
+                    {
+                        "name": p.name,
+                        "size": st.st_size,
+                        "mtime": st.st_mtime,
+                        "url": "/media/%s/%s" % (kind, p.name),
+                    }
+                )
         items.sort(key=lambda x: x["mtime"], reverse=True)
         out[kind] = items
     return out
