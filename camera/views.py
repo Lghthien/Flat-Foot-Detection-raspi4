@@ -1,4 +1,5 @@
 import json
+import logging
 import mimetypes
 import re
 from pathlib import Path
@@ -27,6 +28,8 @@ from .services import (
     v4l2_controls,
     v4l2_set,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @ensure_csrf_cookie
@@ -86,7 +89,12 @@ def api_settings(request):
 @require_POST
 def api_snapshot(request):
     try:
-        return JsonResponse({"ok": True, "name": get_camera().snapshot()})
+        data = _request_data(request)
+        name = get_camera().snapshot(
+            data.get("view"),
+            data.get("session_id"),
+        )
+        return JsonResponse({"ok": True, "name": name})
     except ApiError as error:
         return _json_error(error)
 
@@ -147,6 +155,27 @@ def api_media_delete(request):
         return JsonResponse({"ok": True})
     except ApiError as error:
         return _json_error(error)
+    except Http404 as error:
+        return JsonResponse({"error": str(error)}, status=404)
+    except FileNotFoundError:
+        return JsonResponse({"error": "The file no longer exists"}, status=404)
+    except PermissionError:
+        logger.exception("Permission denied while deleting media file")
+        return JsonResponse(
+            {
+                "error": (
+                    "The server cannot delete this file. Check that the account "
+                    "running Django has write permission to the media folder."
+                )
+            },
+            status=403,
+        )
+    except OSError:
+        logger.exception("Could not delete media file")
+        return JsonResponse(
+            {"error": "The server could not delete this file. Check the server logs."},
+            status=500,
+        )
 
 
 def _stream_frames(camera):

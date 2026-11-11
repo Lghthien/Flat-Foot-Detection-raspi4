@@ -2,6 +2,8 @@
 
 Django web interface for a SoftKinetic DS325 camera on Linux/Raspberry Pi.
 
+For Flutter or other client integrations, see the [Camera API guide](API.md).
+
 ## Project structure
 
 ```text
@@ -49,6 +51,12 @@ to use Django Admin.
 On the camera page, use `+`/`−` or the mouse wheel to zoom the live preview
 from 25% to 400%; drag the zoomed image to inspect other areas and select
 `Reset` to restore 100%.
+
+The guided foot capture workflow records four labeled views per session: the
+left sole, right sole, left medial arch, and right medial arch. Photos are
+tagged with an automatically generated session ID and view name in the gallery
+and filename. Use anonymized records only. This workflow organizes images; it
+does not diagnose medical conditions.
 
 Camera settings can be supplied through environment variables:
 `DS325_CAMERA_INDEX`, `DS325_CAMERA_WIDTH`, `DS325_CAMERA_HEIGHT`,

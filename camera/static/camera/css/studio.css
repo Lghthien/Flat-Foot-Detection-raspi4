@@ -432,6 +432,77 @@ input[type=range] {
   margin-bottom: 6px
 }
 
+.capture-steps {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 14px 0;
+  padding: 0
+}
+
+.capture-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--mut);
+  font-size: 13px
+}
+
+.capture-step-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 11px
+}
+
+.capture-steps li.current {
+  color: var(--txt);
+  font-weight: 600
+}
+
+.capture-steps li.current .capture-step-mark {
+  border-color: var(--acc);
+  background: rgba(91, 140, 255, .18);
+  color: #fff
+}
+
+.capture-steps li.done .capture-step-mark {
+  border-color: var(--grn);
+  background: rgba(46, 230, 166, .14);
+  color: var(--grn)
+}
+
+.capture-instruction {
+  min-height: 40px;
+  font-size: 13px
+}
+
+.capture-session {
+  color: var(--mut);
+  font-size: 12px
+}
+
+.capture-session code {
+  color: var(--txt);
+  font-family: ui-monospace, monospace
+}
+
+.capture-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap
+}
+
+.capture-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+  transform: none
+}
+
 .dim {
   opacity: .45
 }
@@ -538,6 +609,11 @@ input[type=range] {
   padding: 10px 12px
 }
 
+.meta>div:first-child {
+  min-width: 0;
+  flex: 1
+}
+
 .meta b {
   display: block;
   font-size: 12px;
@@ -551,6 +627,7 @@ input[type=range] {
 
 .acts {
   display: flex;
+  flex: 0 0 auto;
   gap: 6px
 }
 
@@ -558,6 +635,7 @@ input[type=range] {
   display: grid;
   place-items: center;
   width: 32px;
+  flex: 0 0 32px;
   height: 32px;
   border-radius: 9px;
   border: 1px solid var(--line);

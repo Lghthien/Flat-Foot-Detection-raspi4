@@ -2,98 +2,219 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DS325 Studio</title>
-
-    <link rel="stylesheet" href="{% static 'camera/css/studio.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'camera/css/studio.css' %}?v=5" />
   </head>
   <body>
     <header>
       <div class="brand">
         <div class="logo" data-i="cam"></div>
-        <div><h1>DS325 Studio</h1><p>Raspberry Pi 4 · SoftKinetic DepthSense 325</p></div>
+        <div>
+          <h1>DS325 Studio</h1>
+          <p>Raspberry Pi 4 · SoftKinetic DepthSense 325</p>
+        </div>
       </div>
       <div class="pills">
-        <span class="pill" id="pillCam"><i></i><b id="pillCamT">Connecting…</b></span>
-        <span class="pill" id="pillFps">– FPS</span>
-        <span class="pill rec hidden" id="pillRec"><i></i><b id="pillRecT">REC</b></span>
-      </div>
-    </header>
-
-    <main>
-      <section class="card">
-        <div class="viewer" id="viewer">
-          <img id="live" alt="Live camera feed" draggable="false">
-          <div class="nosignal" id="nosignal"><div><b>No signal</b><span id="errText">Waiting for camera…</span></div></div>
-          <span class="chip l" id="chipRes">–</span>
-          <span class="chip r hidden" id="chipRec"><i></i><span id="chipRecT">00:00</span></span>
-        </div>
-        <div class="toolbar">
-          <button class="btn primary" id="btnSnap" data-i="cam">Capture photo <kbd>S</kbd></button>
-          <button class="btn danger" id="btnRec">Record video <kbd>R</kbd></button>
-          <button class="btn" id="btnFull" data-i="full">Fullscreen</button>
-          <div class="zoom-controls" aria-label="Image zoom controls">
-            <button class="btn sm" id="btnZoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button>
-            <output id="zoomLevel" aria-live="polite">100%</output>
-            <button class="btn sm" id="btnZoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button>
-            <button class="btn sm" id="btnZoomReset" type="button" aria-label="Reset zoom" title="Reset">Reset</button>
+        <span class="pill" id="pillCam"
+        ><i></i><b id="pillCamT">Connecting…</b></span
+          >
+          <span class="pill" id="pillFps">– FPS</span>
+          <span class="pill rec hidden" id="pillRec"
+          ><i></i><b id="pillRecT">REC</b></span
+            >
           </div>
-        </div>
-      </section>
+        </header>
 
-      <aside class="side">
-        <div class="card">
-          <h2>Camera</h2>
-          <label class="f">Device<select id="selDev"></select></label>
-          <div class="grid2" style="margin-top:10px">
-            <label class="f">Resolution<select id="selRes">
-              <option value="320x240">320×240</option><option value="640x480">640×480</option><option value="1280x720">1280×720 (HD)</option>
-            </select></label>
-            <label class="f">FPS<select id="selFps"><option>5</option><option>10</option><option>15</option><option>24</option><option>30</option></select></label>
-          </div>
-          <label class="f" style="margin-top:10px">Capture format<select id="selFmt">
-            <option value="auto">Automatic (prefer MJPG)</option><option value="MJPG">MJPG</option><option value="YUYV">YUYV</option></select></label>
-          <div class="row"><label for="jq">JPEG quality (stream)</label><output id="o_jq"></output><input type="range" id="jq" min="40" max="100" step="1"></div>
-        </div>
+        <main>
+          <section class="card">
+            <div class="viewer" id="viewer">
+              <img id="live" alt="Live camera feed" draggable="false" />
+              <div class="nosignal" id="nosignal">
+                <div>
+                  <b>No signal</b><span id="errText">Waiting for camera…</span>
+                </div>
+              </div>
+              <span class="chip l" id="chipRes">–</span>
+              <span class="chip r hidden" id="chipRec"
+              ><i></i><span id="chipRecT">00:00</span></span
+                >
+              </div>
+              <div class="toolbar">
+                <button class="btn primary" id="btnSnap" data-i="cam">
+                  Capture photo <kbd>S</kbd>
+                </button>
+                <button class="btn danger" id="btnRec">
+                  Record video <kbd>R</kbd>
+                </button>
+                <button class="btn" id="btnFull" data-i="full">Fullscreen</button>
+                <div class="zoom-controls" aria-label="Image zoom controls">
+                  <button
+                    class="btn sm"
+                    id="btnZoomOut"
+                    type="button"
+                    aria-label="Zoom out"
+                    title="Zoom out"
+                  >
+                    −
+                  </button>
+                  <output id="zoomLevel" aria-live="polite">100%</output>
+                  <button
+                    class="btn sm"
+                    id="btnZoomIn"
+                    type="button"
+                    aria-label="Zoom in"
+                    title="Zoom in"
+                  >
+                    +
+                  </button>
+                  <button
+                    class="btn sm"
+                    id="btnZoomReset"
+                    type="button"
+                    aria-label="Reset zoom"
+                    title="Reset"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </section>
 
-        <div class="card">
-          <h2>Image <button class="btn sm" id="btnSwReset" data-i="reset">Reset</button></h2>
-          <div class="presets">
-            <button class="btn sm" data-preset="natural">Natural</button>
-            <button class="btn sm" data-preset="bright">Brighter</button>
-            <button class="btn sm" data-preset="lowlight">Low light</button>
-          </div>
-          <div id="swControls"></div>
-          <div class="toggle"><span>Enhance shadow detail (CLAHE)</span><input type="checkbox" id="t_clahe"></div>
-          <div class="toggle"><span>Flip horizontally</span><input type="checkbox" id="t_flip_h"></div>
-          <div class="toggle"><span>Flip vertically</span><input type="checkbox" id="t_flip_v"></div>
-          <label class="f" style="margin-top:6px">Rotate<select id="selRot"><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
-          <p class="note">These adjustments apply to both photos and videos.</p>
-        </div>
+            <aside class="side">
+              <div class="card" id="captureCard">
+                <h2>Guided foot capture</h2>
+                <p class="note">
+                  Capture four labeled views of both feet. Keep camera position,
+                  lighting, and image settings consistent throughout the session.
+                </p>
+                <ol class="capture-steps" id="captureSteps"></ol>
+                <p class="capture-instruction" id="captureInstruction" aria-live="polite">
+                  Start a session to capture the left and right soles and medial arches.
+                </p>
+                <p class="capture-session hidden" id="captureSessionInfo">
+                  Session ID: <code id="captureSessionId"></code>
+                </p>
+                <div class="capture-actions">
+                  <button class="btn primary" id="btnCaptureStart" type="button">
+                    Start capture session
+                  </button>
+                  <button class="btn primary hidden" id="btnCaptureStep" type="button">
+                    Capture this view
+                  </button>
+                  <button class="btn sm hidden" id="btnCaptureCancel" type="button">
+                    Cancel
+                  </button>
+                </div>
+                <p class="note">
+                  Use anonymized records only. Images are stored on this server. This
+                  tool organizes photos and does not diagnose medical conditions.
+                </p>
+              </div>
 
-        <div class="card" id="hwCard">
-          <h2>Camera hardware <button class="btn sm" id="btnHwReset" data-i="reset">Defaults</button></h2>
-          <div id="hwControls"></div>
-          <p class="note" id="hwNote"></p>
-        </div>
-      </aside>
-    </main>
+              <div class="card">
+                <h2>Camera</h2>
+                <label class="f">Device<select id="selDev"></select></label>
+                <div class="grid2" style="margin-top: 10px">
+                  <label class="f"
+                  >Resolution<select id="selRes">
+                    <option value="320x240">320×240</option>
+                    <option value="640x480">640×480</option>
+                    <option value="1280x720">1280×720 (HD)</option>
+                  </select></label
+                    >
+                    <label class="f"
+                    >FPS<select id="selFps">
+                      <option>5</option>
+                      <option>10</option>
+                      <option>15</option>
+                      <option>24</option>
+                      <option>30</option>
+                    </select></label
+                      >
+                    </div>
+                    <label class="f" style="margin-top: 10px"
+                    >Capture format<select id="selFmt">
+                      <option value="auto">Automatic (prefer MJPG)</option>
+                      <option value="MJPG">MJPG</option>
+                      <option value="YUYV">YUYV</option>
+                    </select></label
+                      >
+                      <div class="row">
+                        <label for="jq">JPEG quality (stream)</label
+                          ><output id="o_jq"></output
+                            ><input type="range" id="jq" min="40" max="100" step="1" />
+                          </div>
+                        </div>
 
-    <section class="card gallery">
-      <div class="tabs">
-        <button class="tab on" data-tab="photos">Photos<span id="cntP">0</span></button>
-        <button class="tab" data-tab="videos">Video<span id="cntV">0</span></button>
-        <span class="path" id="pathHint"></span>
-      </div>
-      <p class="note hidden" id="ffNote">FFmpeg is not installed, so videos are saved as .avi files that cannot be played in the browser. Install it with: sudo apt install ffmpeg</p>
-      <div id="grid"></div>
-    </section>
+                        <div class="card">
+                          <h2>
+                            Image
+                            <button class="btn sm" id="btnSwReset" data-i="reset">Reset</button>
+                          </h2>
+                          <div class="presets">
+                            <button class="btn sm" data-preset="natural">Natural</button>
+                            <button class="btn sm" data-preset="bright">Brighter</button>
+                            <button class="btn sm" data-preset="lowlight">Low light</button>
+                          </div>
+                          <div id="swControls"></div>
+                          <div class="toggle">
+                            <span>Enhance shadow detail (CLAHE)</span
+                              ><input type="checkbox" id="t_clahe" />
+                            </div>
+                            <div class="toggle">
+                              <span>Flip horizontally</span
+                                ><input type="checkbox" id="t_flip_h" />
+                              </div>
+                              <div class="toggle">
+                                <span>Flip vertically</span><input type="checkbox" id="t_flip_v" />
+                              </div>
+                              <label class="f" style="margin-top: 6px"
+                              >Rotate<select id="selRot">
+                                <option value="0">0°</option>
+                                <option value="90">90°</option>
+                                <option value="180">180°</option>
+                                <option value="270">270°</option>
+                              </select></label
+                                >
+                                <p class="note">These adjustments apply to both photos and videos.</p>
+                              </div>
 
-    <div id="modal"><div class="box" id="modalBox"></div></div>
-    <div id="toast"></div>
+                              <div class="card" id="hwCard">
+                                <h2>
+                                  Camera hardware
+                                  <button class="btn sm" id="btnHwReset" data-i="reset">
+                                    Defaults
+                                  </button>
+                                </h2>
+                                <div id="hwControls"></div>
+                                <p class="note" id="hwNote"></p>
+                              </div>
+                            </aside>
+                          </main>
 
-    <div hidden>{% csrf_token %}</div>
-    <script src="{% static 'camera/js/studio.js' %}?v=5" defer></script>
-  </body>
-</html>
+                          <section class="card gallery">
+                            <div class="tabs">
+                              <button class="tab on" data-tab="photos">
+                                Photos<span id="cntP">0</span>
+                              </button>
+                              <button class="tab" data-tab="videos">
+                                Video<span id="cntV">0</span>
+                              </button>
+                              <span class="path" id="pathHint"></span>
+                            </div>
+                            <p class="note hidden" id="ffNote">
+                              FFmpeg is not installed, so videos are saved as .avi files that cannot
+                              be played in the browser. Install it with: sudo apt install ffmpeg
+                            </p>
+                            <div id="grid"></div>
+                          </section>
+
+                          <div id="modal"><div class="box" id="modalBox"></div></div>
+                          <div id="toast"></div>
+
+                          <div hidden>{% csrf_token %}</div>
+                          <script src="{% static 'camera/js/studio.js' %}?v=7" defer></script>
+                        </body>
+                      </html>

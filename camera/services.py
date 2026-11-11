@@ -54,6 +54,13 @@ SPEC = {
     "rotate": ("enum", [0, 90, 180, 270]),
 }
 RESTART_KEYS = {"index", "width", "height", "fps", "format"}
+CAPTURE_VIEWS = {
+    "left_sole": "Left sole",
+    "right_sole": "Right sole",
+    "left_medial": "Left medial arch",
+    "right_medial": "Right medial arch",
+}
+CAPTURE_SESSION_RE = re.compile(r"^[a-z0-9-]{1,32}$")
 
 
 class ApiError(Exception):
@@ -61,6 +68,19 @@ class ApiError(Exception):
         super().__init__(msg)
         self.code = code
         self.msg = msg
+
+
+def capture_prefix(view, session_id):
+    if view is None and session_id is None:
+        return "photo"
+    if (
+        not isinstance(view, str)
+        or view not in CAPTURE_VIEWS
+        or not isinstance(session_id, str)
+        or not CAPTURE_SESSION_RE.fullmatch(session_id)
+    ):
+        raise ApiError(400, "Invalid capture view or session ID")
+    return f"capture_{session_id}_{view}"
 
 
 def clean_value(key, val):
@@ -562,11 +582,12 @@ class CameraService:
         return img
 
     # --- actions
-    def snapshot(self):
+    def snapshot(self, view=None, session_id=None):
+        prefix = capture_prefix(view, session_id)
         img = self.latest
         if img is None:
             raise ApiError(503, "No image is available from the camera")
-        path = unique_path(PHOTO_DIR, "photo", "jpg")
+        path = unique_path(PHOTO_DIR, prefix, "jpg")
         cv2.imwrite(str(path), img, [cv2.IMWRITE_JPEG_QUALITY, 95])
         return path.name
 
@@ -602,14 +623,22 @@ def media_list(cam):
         for p in folder.iterdir():
             if p.suffix.lower() in exts and p.name != cur:
                 st = p.stat()
-                items.append(
-                    {
-                        "name": p.name,
-                        "size": st.st_size,
-                        "mtime": st.st_mtime,
-                        "url": "/media/%s/%s" % (kind, p.name),
-                    }
+                item = {
+                    "name": p.name,
+                    "size": st.st_size,
+                    "mtime": st.st_mtime,
+                    "url": "/media/%s/%s" % (kind, p.name),
+                }
+                capture = re.fullmatch(
+                    r"capture_([a-z0-9-]{1,32})_"
+                    r"(left_sole|right_sole|left_medial|right_medial)_"
+                    r"\d{8}_\d{6}(?:_\d+)?\.jpg",
+                    p.name,
                 )
+                if capture:
+                    item["capture_session"] = capture.group(1)
+                    item["capture_view"] = capture.group(2)
+                items.append(item)
         items.sort(key=lambda x: x["mtime"], reverse=True)
         out[kind] = items
     return out
